@@ -1,0 +1,31 @@
+services:
+  db2:
+    image: ibmcom/db2:11.5.8.0
+    container_name: db2-server
+    privileged: true
+    environment:
+      - LICENSE=accept
+      - DB2INST1_PASSWORD=test
+      - DBNAME=TESTDB
+    ports:
+      - "50000:50000"
+    volumes:
+      - ./db:/database
+    networks:
+      - mi-red
+
+  mi-app:
+    build: ./src
+    container_name: ibm-db2-app
+    depends_on:
+      - db2
+    environment:
+      - DB2_CLI_DRIVER_INSTALL_PATH=/app/clidriver
+      - LD_LIBRARY_PATH=/app/clidriver/lib:/app/clidriver/lib/icc
+      - ConnectionStrings__Db2Connection=Server=db2:50000;Database=TESTDB;UID=db2inst1;PWD=test;
+    networks:
+      - mi-red
+
+networks:
+  mi-red:
+    driver: bridge
